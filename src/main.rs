@@ -1,35 +1,5 @@
 use num_bigint::BigInt;
 use std::time::Instant;
-// use std::fmt;
-
-#[derive(Debug)]
-struct Term {
-    coeff: BigInt,
-    a_exp: u32,
-    b_exp: u32,
-}
-
-trait Eval {
-    fn eval(&self, a: BigInt, b: BigInt) -> BigInt;
-}
-
-impl Term {
-    fn from(coeff: BigInt, a_exp: u32, b_exp: u32) -> Self {
-        Term {
-            coeff,
-            a_exp,
-            b_exp,
-        }
-    }
-}
-
-impl Eval for Vec<Term> {
-    fn eval(&self, a: BigInt, b: BigInt) -> BigInt {
-        self
-            .iter()
-            .fold(BigInt::from(0u32), |acc, x| acc + &x.coeff * a.pow(x.a_exp) * b.pow(x.b_exp))
-    }
-}
 
 #[derive(Debug)]
 struct Binomial {
@@ -77,7 +47,36 @@ impl Binomial {
     }
 }
 
-fn choose(n: u32, r: u32) -> u32 {
+#[derive(Debug)]
+struct Term {
+    coeff: BigInt,
+    a_exp: u32,
+    b_exp: u32,
+}
+
+trait Eval {
+    fn eval(&self, a: BigInt, b: BigInt) -> BigInt;
+}
+
+impl Eval for Vec<Term> {
+    fn eval(&self, a: BigInt, b: BigInt) -> BigInt {
+        self
+            .iter()
+            .fold(BigInt::from(0u32), |acc, x| acc + &x.coeff * a.pow(x.a_exp) * b.pow(x.b_exp))
+    }
+}
+
+impl Term {
+    fn from(coeff: BigInt, a_exp: u32, b_exp: u32) -> Self {
+        Term {
+            coeff,
+            a_exp,
+            b_exp,
+        }
+    }
+}
+
+fn choose(n: u32, r: u32) -> BigInt {
     let (a, b) = if r > (n-r) {
         (r, n-r)
     } else {
@@ -85,32 +84,28 @@ fn choose(n: u32, r: u32) -> u32 {
     };
 
     let dividend = (a+1..=n)
-        .fold(1, |acc, i| acc * i);
+        .fold(BigInt::from(1u32), |acc, i| acc * i);
 
     let divisor = (2..=b)
-        .fold(1, |acc, i| acc * i);
+        .fold(BigInt::from(1u32), |acc, i| acc * i);
 
     dividend/divisor
 }
 
 fn main() {
-    let a_coeff = BigInt::from(-12i32);
-    let a_exp = 4;
-    let b_coeff = BigInt::from(23i32);
-    let b_exp = 7;
-    let n = 15;
-
-    let binomial = Binomial::from(a_coeff, a_exp, b_coeff, b_exp, n);
+    let binomial = Binomial::from(
+/*a*/   BigInt::from(-12i32), 4,
+/*b*/   BigInt::from(23i32), 7,
+/*n*/   15,
+    );
 
     println!("{:?}", &binomial);
 
     let start = Instant::now();
-    let result = binomial.expand();
+    let result = binomial.expand().eval(BigInt::from(14i32), BigInt::from(20i32));
     let duration = start.elapsed();
 
-    let r = result.eval(BigInt::from(2i32), BigInt::from(2i32));
-
-    println!("{:?}", r);
+    println!("{:?}", result);
 
     println!("{:.2?}", duration);
 }
