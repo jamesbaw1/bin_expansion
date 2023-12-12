@@ -1,7 +1,6 @@
 use num_bigint::BigInt;
 use std::time::Instant;
 
-#[derive(Debug)]
 struct Binomial {
     a_coeff: BigInt,
     a_exp: u32,
@@ -11,17 +10,6 @@ struct Binomial {
 }
 
 impl Binomial {
-    fn new() -> Self {
-        
-        Binomial {
-            a_coeff: BigInt::from(1u32),
-            a_exp: 1,
-            b_coeff: BigInt::from(1u32),
-            b_exp: 1,
-            n: 1,
-        }
-    }
-
     fn from(a_coeff: BigInt, a_exp: u32, b_coeff: BigInt, b_exp: u32, n: u32) -> Self {
         Binomial {
             a_coeff,
@@ -32,7 +20,7 @@ impl Binomial {
         }
     }
 
-    fn expand(&self) -> Vec<Term> {
+    fn expand(&self) -> Expression {
         let mut result = Vec::new();
         for i in 0..=self.n {
             result.push(
@@ -43,27 +31,20 @@ impl Binomial {
             ));
         }
 
-        result
+        Expression { expr: result }
     }
 }
 
-#[derive(Debug)]
+impl std::fmt::Debug for Binomial {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}a^{}{:+}b^{})^{}", self.a_coeff, self.a_exp, self.b_coeff, self.b_exp, self.n)
+    }
+}
+
 struct Term {
     coeff: BigInt,
     a_exp: u32,
     b_exp: u32,
-}
-
-trait Eval {
-    fn eval(&self, a: BigInt, b: BigInt) -> BigInt;
-}
-
-impl Eval for Vec<Term> {
-    fn eval(&self, a: BigInt, b: BigInt) -> BigInt {
-        self
-            .iter()
-            .fold(BigInt::from(0u32), |acc, x| acc + &x.coeff * a.pow(x.a_exp) * b.pow(x.b_exp))
-    }
 }
 
 impl Term {
@@ -73,6 +54,36 @@ impl Term {
             a_exp,
             b_exp,
         }
+    }
+}
+
+impl std::fmt::Display for Term {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}(a^{})(b^{})]", self.coeff, self.a_exp, self.b_exp)
+    }
+}
+
+struct Expression {
+    expr: Vec<Term>,
+}
+
+impl Expression {
+    fn eval(&self, a: BigInt, b: BigInt) -> BigInt {
+        self.expr
+            .iter()
+            .fold(BigInt::from(0u32), |acc, x| acc + &x.coeff * a.pow(x.a_exp) * b.pow(x.b_exp))
+    }
+}
+
+impl std::fmt::Debug for Expression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}",
+            self.expr
+            .iter()
+            .map(|t| format!("{}", t))
+            .collect::<Vec<_>>()
+            .join(" + ")
+        )
     }
 }
 
@@ -94,15 +105,17 @@ fn choose(n: u32, r: u32) -> BigInt {
 
 fn main() {
     let binomial = Binomial::from(
-/*a*/   BigInt::from(-12i32), 4,
-/*b*/   BigInt::from(23i32), 7,
-/*n*/   15,
+/*a*/   BigInt::from(1i32), 1,
+/*b*/   BigInt::from(-1i32), 1,
+/*n*/   1000,
     );
 
     println!("{:?}", &binomial);
 
     let start = Instant::now();
-    let result = binomial.expand().eval(BigInt::from(14i32), BigInt::from(20i32));
+    let result = binomial
+        .expand()
+        .eval(BigInt::from(2i32), BigInt::from(3i32));
     let duration = start.elapsed();
 
     println!("{:?}", result);
