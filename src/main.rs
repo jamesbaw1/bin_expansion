@@ -1,5 +1,4 @@
 use num_bigint::BigInt;
-use std::time::Instant;
 
 struct Binomial {
     a_coeff: BigInt,
@@ -21,21 +20,20 @@ impl Binomial {
     }
 
     fn expand(&self) -> Expression {
-        let mut result = Vec::new();
-        for i in 0..=self.n {
-            result.push(
-                Term::from(
-                    BigInt::from(choose(self.n, i)) * self.a_coeff.pow(self.n - i) * self.b_coeff.pow(i),
-                    self.a_exp * (self.n - i),
-                    self.b_exp * i,
+        let mut expr = Vec::new();
+        for x in 0..=self.n {
+            expr.push(Term::from(
+                BigInt::from(choose(self.n, x)) * self.a_coeff.pow(self.n - x) * self.b_coeff.pow(x),
+                self.a_exp * (self.n - x),
+                self.b_exp * x,
             ));
         }
 
-        Expression { expr: result }
+        Expression { expr: expr }
     }
 }
 
-impl std::fmt::Debug for Binomial {
+impl std::fmt::Display for Binomial {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}a^{}{:+}b^{})^{}", self.a_coeff, self.a_exp, self.b_coeff, self.b_exp, self.n)
     }
@@ -73,16 +71,34 @@ impl Expression {
             .iter()
             .fold(BigInt::from(0u32), |acc, x| acc + &x.coeff * a.pow(x.a_exp) * b.pow(x.b_exp))
     }
+
+    fn a_eval(&self, a: BigInt) -> Expression {
+        Expression {
+            expr: self.expr
+                .iter()
+                .map(|x| Term::from(&x.coeff * a.pow(x.a_exp), 0, x.b_exp))
+                .collect()
+        }
+    }
+
+    fn b_eval(&self, b: BigInt) -> Expression {
+        Expression {
+            expr: self.expr
+                .iter()
+                .map(|x| Term::from(&x.coeff * b.pow(x.b_exp), x.a_exp, 0))
+                .collect()
+        }
+    }
 }
 
-impl std::fmt::Debug for Expression {
+impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}",
             self.expr
-            .iter()
-            .map(|t| format!("{}", t))
-            .collect::<Vec<_>>()
-            .join(" + ")
+                .iter()
+                .map(|x| format!("{}", x))
+                .collect::<Vec<_>>()
+                .join(" + ")
         )
     }
 }
@@ -95,10 +111,10 @@ fn choose(n: u32, r: u32) -> BigInt {
     };
 
     let dividend = (a+1..=n)
-        .fold(BigInt::from(1u32), |acc, i| acc * i);
+        .fold(BigInt::from(1u32), |acc, x| acc * x);
 
     let divisor = (2..=b)
-        .fold(BigInt::from(1u32), |acc, i| acc * i);
+        .fold(BigInt::from(1u32), |acc, x| acc * x);
 
     dividend/divisor
 }
@@ -107,18 +123,20 @@ fn main() {
     let binomial = Binomial::from(
 /*a*/   BigInt::from(1i32), 1,
 /*b*/   BigInt::from(-1i32), 1,
-/*n*/   1000,
+/*n*/   10,
     );
 
-    println!("{:?}", &binomial);
+    println!("{}", &binomial);
 
-    let start = Instant::now();
+    println!("{}", binomial.expand());
+
+    let start = std::time::Instant::now();
     let result = binomial
         .expand()
-        .eval(BigInt::from(2i32), BigInt::from(3i32));
+        .b_eval(BigInt::from(2i32));
     let duration = start.elapsed();
 
-    println!("{:?}", result);
+    println!("{}", result);
 
     println!("{:.2?}", duration);
 }
