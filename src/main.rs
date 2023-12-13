@@ -10,6 +10,7 @@ struct Binomial {
 }
 
 impl Binomial {
+    #[allow(dead_code)]
     fn from(a_coeff: BigInt, a_exp: u32, b_coeff: BigInt, b_exp: u32, n: u32) -> Self {
         Binomial {
             a_coeff,
@@ -75,8 +76,7 @@ impl Binomial {
             binomial.b_coeff,
             binomial.b_exp,
             binomial.n
-        );        let start = std::time::Instant::now();
-        let duration = start.elapsed();
+        );
     
         binomial
     }
@@ -189,7 +189,7 @@ where
     println!("{}", prompt);
     loop {
         let mut input = String::default();
-        let _ = std::io::stdin().read_line(&mut input);
+        let _ = std::io::stdin().read_line(&mut input).expect("Failed to read line");
 
         match input.trim().parse::<T>() {
             Ok(parsed_value) => {
@@ -209,17 +209,27 @@ fn main() {
     let binomial = Binomial::define();
 
     loop {
-        println!("\nevaluate expression? Y/n");
+        println!("\nevaluate expression? a/b/full/none");
         let mut inp = String::default();
         std::io::stdin().read_line(&mut inp).expect("Failed to read line");
 
         match inp.trim().to_lowercase().as_str() {
-            "yes" | "y" => {
+            "full" | "f" => {
                 let result = binomial.expand().eval(input::<BigInt>("\nlet a =".to_string()), input::<BigInt>("\nlet b =".to_string()));
                 println!("\n{}", result);
                 break;
             }
-            "no" | "n" => {
+            "a" => {
+                let result = binomial.expand().a_eval(input::<BigInt>("\nlet a =".to_string()));
+                println!("\n{}", result);
+                break;
+            }
+            "b" => {
+                let result = binomial.expand().b_eval(input::<BigInt>("\nlet b =".to_string()));
+                println!("\n{}", result);
+                break;
+            }
+            "none" | "n" => {
                 let result = binomial.expand();
                 println!("\n{}", result);
                 break;
