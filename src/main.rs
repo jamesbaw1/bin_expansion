@@ -10,6 +10,67 @@ struct Binomial {
 }
 
 impl Binomial {
+    fn define() -> Self {
+        let mut binomial = Binomial::default();
+    
+        binomial.a_coeff = input::<BigInt>(format!(
+            "({}a^{}+{}b^{})^{}\nlet \u{03B1} =",
+            '\u{03B1}',
+            '\u{03B2}',
+            '\u{03B3}',
+            '\u{03B4}',
+            'n'
+        ));
+    
+        binomial.a_exp = input::<u32>(format!(
+            "\n({}a^{}+{}b^{})^{}\nlet \u{03B2} =",
+            binomial.a_coeff,
+            '\u{03B2}',
+            '\u{03B3}',
+            '\u{03B4}',
+            'n'
+        ));
+    
+        binomial.b_coeff = input::<BigInt>(format!(
+            "\n({}a^{}+{}b^{})^{}\nlet \u{03B3} =",
+            binomial.a_coeff,
+            binomial.a_exp,
+            '\u{03B3}',
+            '\u{03B4}',
+            'n'
+        ));
+    
+        binomial.b_exp = input::<u32>(format!(
+            "\n({}a^{}{:+}b^{})^{}\nlet \u{03B4} =",
+            binomial.a_coeff,
+            binomial.a_exp,
+            binomial.b_coeff,
+            '\u{03B4}',
+            'n'
+        ));
+    
+        binomial.n = input::<u32>(format!(
+            "\n({}a^{}{:+}b^{})^{}\nlet n =",
+            binomial.a_coeff,
+            binomial.a_exp,
+            binomial.b_coeff,
+            binomial.b_exp,
+            'n'
+        ));
+    
+        println!(
+            "\n({}a^{}{:+}b^{})^{}",
+            binomial.a_coeff,
+            binomial.a_exp,
+            binomial.b_coeff,
+            binomial.b_exp,
+            binomial.n
+        );        let start = std::time::Instant::now();
+        let duration = start.elapsed();
+    
+        binomial
+    }
+
     fn from(a_coeff: BigInt, a_exp: u32, b_coeff: BigInt, b_exp: u32, n: u32) -> Self {
         Binomial {
             a_coeff,
@@ -144,69 +205,8 @@ where
     }
 }
 
-fn def_bin() -> Binomial {
-    let mut binomial = Binomial::default();
-
-    binomial.a_coeff = input::<BigInt>(format!(
-        "({}a^{}+{}b^{})^{}\nlet \u{03B1} =",
-        '\u{03B1}',
-        '\u{03B2}',
-        '\u{03B3}',
-        '\u{03B4}',
-        'n'
-    ));
-
-    binomial.a_exp = input::<u32>(format!(
-        "\n({}a^{}+{}b^{})^{}\nlet \u{03B2} =",
-        binomial.a_coeff,
-        '\u{03B2}',
-        '\u{03B3}',
-        '\u{03B4}',
-        'n'
-    ));
-
-    binomial.b_coeff = input::<BigInt>(format!(
-        "\n({}a^{}+{}b^{})^{}\nlet \u{03B3} =",
-        binomial.a_coeff,
-        binomial.a_exp,
-        '\u{03B3}',
-        '\u{03B4}',
-        'n'
-    ));
-
-    binomial.b_exp = input::<u32>(format!(
-        "\n({}a^{}{:+}b^{})^{}\nlet \u{03B4} =",
-        binomial.a_coeff,
-        binomial.a_exp,
-        binomial.b_coeff,
-        '\u{03B4}',
-        'n'
-    ));
-
-    binomial.n = input::<u32>(format!(
-        "\n({}a^{}{:+}b^{})^{}\nlet n =",
-        binomial.a_coeff,
-        binomial.a_exp,
-        binomial.b_coeff,
-        binomial.b_exp,
-        'n'
-    ));
-
-    println!(
-        "\n({}a^{}{:+}b^{})^{}",
-        binomial.a_coeff,
-        binomial.a_exp,
-        binomial.b_coeff,
-        binomial.b_exp,
-        binomial.n
-    );        let start = std::time::Instant::now();
-    let duration = start.elapsed();
-
-    binomial
-}
-
 fn main() {
-    let binomial = def_bin();
+    let binomial = Binomial::define();
 
     loop {
         println!("\nevaluate expression? Y/n");
@@ -215,7 +215,7 @@ fn main() {
 
         match inp.trim().to_lowercase().as_str() {
             "yes" | "y" => {
-                let result = binomial.expand().eval(input::<BigInt>("let a =".to_string()), input::<BigInt>("let b =".to_string()));
+                let result = binomial.expand().eval(input::<BigInt>("\nlet a =".to_string()), input::<BigInt>("\nlet b =".to_string()));
                 println!("\n{}", result);
                 break;
             }
