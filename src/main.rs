@@ -1,5 +1,6 @@
 use num_bigint::BigInt;
 
+#[derive(Default)]
 struct Binomial {
     a_coeff: BigInt,
     a_exp: u32,
@@ -35,7 +36,13 @@ impl Binomial {
 
 impl std::fmt::Display for Binomial {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}a^{}{:+}b^{})^{}", self.a_coeff, self.a_exp, self.b_coeff, self.b_exp, self.n)
+        write!(f, "({}a^{}{:+}b^{})^{}",
+            self.a_coeff,
+            self.a_exp,
+            self.b_coeff,
+            self.b_exp,
+            self.n
+        )
     }
 }
 
@@ -110,33 +117,114 @@ fn choose(n: u32, r: u32) -> BigInt {
         (n-r, r)
     };
 
-    let dividend = (a+1..=n)
-        .fold(BigInt::from(1u32), |acc, x| acc * x);
+    (a+1..=n).product::<BigInt>() /
+    (2..=b).product::<BigInt>()
+}
 
-    let divisor = (2..=b)
-        .fold(BigInt::from(1u32), |acc, x| acc * x);
+fn input<T>(prompt: String) -> T
+where
+    T: std::str::FromStr + std::cmp::PartialEq + Default,
+{
+    println!("{}", prompt);
+    loop {
+        let mut input = String::default();
+        let _ = std::io::stdin().read_line(&mut input);
 
-    dividend/divisor
+        match input.trim().parse::<T>() {
+            Ok(parsed_value) => {
+                if parsed_value == <T>::default() { println!("WARNING: Null values can cause undefined behavior"); }
+                return parsed_value;
+            }
+            Err(_) => {
+                let type_name = std::any::type_name::<T>();
+                println!("Must be {}", type_name.rsplit("::").next().unwrap_or(type_name));
+                continue;
+            }
+        }
+    }
+}
+
+fn def_bin() -> Binomial {
+    let mut binomial = Binomial::default();
+
+    binomial.a_coeff = input::<BigInt>(format!(
+        "({}a^{}+{}b^{})^{}\nlet \u{03B1} =",
+        '\u{03B1}',
+        '\u{03B2}',
+        '\u{03B3}',
+        '\u{03B4}',
+        'n'
+    ));
+
+    binomial.a_exp = input::<u32>(format!(
+        "\n({}a^{}+{}b^{})^{}\nlet \u{03B2} =",
+        binomial.a_coeff,
+        '\u{03B2}',
+        '\u{03B3}',
+        '\u{03B4}',
+        'n'
+    ));
+
+    binomial.b_coeff = input::<BigInt>(format!(
+        "\n({}a^{}+{}b^{})^{}\nlet \u{03B3} =",
+        binomial.a_coeff,
+        binomial.a_exp,
+        '\u{03B3}',
+        '\u{03B4}',
+        'n'
+    ));
+
+    binomial.b_exp = input::<u32>(format!(
+        "\n({}a^{}{:+}b^{})^{}\nlet \u{03B4} =",
+        binomial.a_coeff,
+        binomial.a_exp,
+        binomial.b_coeff,
+        '\u{03B4}',
+        'n'
+    ));
+
+    binomial.n = input::<u32>(format!(
+        "\n({}a^{}{:+}b^{})^{}\nlet n =",
+        binomial.a_coeff,
+        binomial.a_exp,
+        binomial.b_coeff,
+        binomial.b_exp,
+        'n'
+    ));
+
+    println!(
+        "\n({}a^{}{:+}b^{})^{}",
+        binomial.a_coeff,
+        binomial.a_exp,
+        binomial.b_coeff,
+        binomial.b_exp,
+        binomial.n
+    );        let start = std::time::Instant::now();
+    let duration = start.elapsed();
+
+    binomial
 }
 
 fn main() {
-    let binomial = Binomial::from(
-/*a*/   BigInt::from(1i32), 1,
-/*b*/   BigInt::from(-1i32), 1,
-/*n*/   10,
-    );
+    let binomial = def_bin();
 
-    println!("{}", &binomial);
+    loop {
+        println!("\nevaluate expression? Y/n");
+        let mut inp = String::default();
+        std::io::stdin().read_line(&mut inp).expect("Failed to read line");
 
-    println!("{}", binomial.expand());
-
-    let start = std::time::Instant::now();
-    let result = binomial
-        .expand()
-        .b_eval(BigInt::from(2i32));
-    let duration = start.elapsed();
-
-    println!("{}", result);
-
-    println!("{:.2?}", duration);
+        match inp.trim().to_lowercase().as_str() {
+            "yes" | "y" => {
+                let result = binomial.expand().eval(input::<BigInt>("let a =".to_string()), input::<BigInt>("let b =".to_string()));
+                println!("\n{}", result);
+                break;
+            }
+            "no" | "n" => {
+                let result = binomial.expand();
+                println!("\n{}", result);
+                break;
+            }
+            _ => continue,
+        }
+    }
 }
