@@ -10,6 +10,16 @@ struct Binomial {
 }
 
 impl Binomial {
+    fn from(a_coeff: BigInt, a_exp: u32, b_coeff: BigInt, b_exp: u32, n: u32) -> Self {
+        Binomial {
+            a_coeff,
+            a_exp,
+            b_coeff,
+            b_exp,
+            n,
+        }
+    }
+
     fn define() -> Self {
         let mut binomial = Binomial::default();
     
@@ -69,16 +79,6 @@ impl Binomial {
         let duration = start.elapsed();
     
         binomial
-    }
-
-    fn from(a_coeff: BigInt, a_exp: u32, b_coeff: BigInt, b_exp: u32, n: u32) -> Self {
-        Binomial {
-            a_coeff,
-            a_exp,
-            b_coeff,
-            b_exp,
-            n,
-        }
     }
 
     fn expand(&self) -> Expression {
